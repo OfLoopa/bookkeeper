@@ -1,12 +1,8 @@
 """
 Модель бюджета по категории расходов
 """
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterator
-
-from ..repository.abstract_repository import AbstractRepository
 
 
 @dataclass
@@ -16,7 +12,6 @@ class Budget:
     id категории, к которой относится бюджет (category),
     и сумма бюджета на данный срок (amount)
     """
-    # TODO: подумать о возможности добавления бюджета по всем категориям (выставить All или None у категории)
 
     category: int
     amount: int
