@@ -37,7 +37,8 @@ class SQLiteRepository(AbstractRepository[T]):
 
     def __parse_query_to_class(self, query: tuple[Any] | None) -> Optional[T] | None:
         if query is not None:
-            out = self.cls(*query)
+            query_dict = dict(zip({"pk": int} | self.fields, query))
+            out = self.cls(**query_dict)
         else:
             out = None
         return out
@@ -48,7 +49,7 @@ class SQLiteRepository(AbstractRepository[T]):
         """
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
-            cur.execute(f"DROP TABLE {self.table_name}")
+            cur.execute(f"DROP TABLE IF EXISTS {self.table_name}")
         con.close()
 
     def add(self, obj: T) -> int:
@@ -81,9 +82,10 @@ class SQLiteRepository(AbstractRepository[T]):
     def get_all(self, where: dict[str, Any] | None = None) -> list[Optional[T]]:
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
-            raw_res = cur.execute(
-                f"SELECT * FROM {self.table_name}"
-            )
+            query = f"SELECT * FROM {self.table_name}"
+            if where is not None:
+                query += " WHERE " + ', '.join([f"{key} = {value}" for key, value in where.items()])
+            raw_res = cur.execute(query)
             res = raw_res.fetchall()
         con.close()
         out = [self.__parse_query_to_class(res[pk]) for pk in range(len(res))]

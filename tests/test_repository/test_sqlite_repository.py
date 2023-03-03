@@ -73,3 +73,14 @@ def test_get_all(repo, test_class):
     for o in objects:
         repo.add(o)
     assert repo.get_all() == objects
+
+
+def test_get_all_with_condition(repo, test_class):
+    objects = [test_class(f=20) for i in range(5)]
+    objects_2 = [test_class(f=10) for i in range(5)]
+    for o in objects:
+        repo.add(o)
+    for o in objects_2:
+        repo.add(o)
+    assert repo.get_all(where={"f": 20}) == objects
+    assert repo.get_all(where={"f": 10}) == objects_2
