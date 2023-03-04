@@ -4,6 +4,9 @@ from bookkeeper.repository.sqlite_repository import SQLiteRepository
 import pytest
 
 
+TEST_DB = 'bookkeeper/databases/test.sqlite.db'
+
+
 @pytest.fixture
 def test_class():
     @dataclass
@@ -15,7 +18,7 @@ def test_class():
 
 @pytest.fixture
 def repos(test_class):
-    repos = SQLiteRepository.repository_factory(models=[test_class], db_file='test.sqlite')
+    repos = SQLiteRepository.repository_factory(models=[test_class], db_file=TEST_DB)
     yield repos
     for cls, repo in repos.items():
         repo.drop_table()
@@ -30,7 +33,8 @@ def test_repo_factory(repos, test_class):
     obj = test_class()
     assert obj.pk == 0
 
-    assert repos[test_class].db_file == 'test.sqlite' and repos[test_class].table_name == test_class.__name__.lower()
+    assert repos[test_class].db_file == TEST_DB \
+           and repos[test_class].table_name == test_class.__name__.lower()
 
 
 def test_crud(repo, test_class):

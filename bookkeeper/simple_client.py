@@ -11,11 +11,12 @@ from bookkeeper.utils import read_tree
 
 
 MODE = os.getenv('MODE_ENV')
+DB_FILE = 'bookkeeper/databases/client.sqlite.db'
 
 if MODE == "prod":
     print("Production version")
-    cat_repo = SQLiteRepository('client.sqlite', Category)
-    exp_repo = SQLiteRepository('client.sqlite', Expense)
+    cat_repo = SQLiteRepository(DB_FILE, Category)
+    exp_repo = SQLiteRepository(DB_FILE, Expense)
 else:
     print("Development version")
     cat_repo = MemoryRepository[Category]()

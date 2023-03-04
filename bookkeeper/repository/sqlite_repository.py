@@ -30,7 +30,8 @@ class SQLiteRepository(AbstractRepository[T]):
         """
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
-            query = f"CREATE TABLE IF NOT EXISTS {self.table_name} (pk INTEGER PRIMARY KEY, "
+            query = f"CREATE TABLE IF NOT EXISTS {self.table_name} "
+            query += "(pk INTEGER PRIMARY KEY, "
             query += ', '.join(list(self.fields.keys())) + ')'
             cur.execute(query)
         con.close()
@@ -84,7 +85,9 @@ class SQLiteRepository(AbstractRepository[T]):
             cur = con.cursor()
             query = f"SELECT * FROM {self.table_name}"
             if where is not None:
-                query += " WHERE " + ', '.join([f"{key} = {value}" for key, value in where.items()])
+                query += " WHERE " + ', '.join(
+                    [f"{key} = {value}" for key, value in where.items()]
+                )
             raw_res = cur.execute(query)
             res = raw_res.fetchall()
         con.close()
@@ -97,7 +100,9 @@ class SQLiteRepository(AbstractRepository[T]):
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             sql_query = f"UPDATE {self.table_name} SET "
-            sql_query += ','.join([f"{attr} = {val}" for attr, val in obj.__dict__.items() if attr != 'pk'])
+            sql_query += ','.join(
+                [f"{attr} = {val}" for attr, val in obj.__dict__.items() if attr != 'pk']
+            )
             sql_query += f" WHERE pk={obj.pk}"
             cur.execute(sql_query)
         con.close()
