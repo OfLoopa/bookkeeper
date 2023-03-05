@@ -3,6 +3,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from menu_bar import pageManagerToolbar
 from expenses_page import expensesPage
+from categories_page import categoriesPage
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -17,8 +18,8 @@ class MainWindow(QtWidgets.QWidget):
         self.menuBarWidget = pageManagerToolbar()
         self.layout.addWidget(self.menuBarWidget)
 
-        self.expensesPage = expensesPage()
-        self.layout.addWidget(self.expensesPage)
+        self.currentPage = categoriesPage()
+        self.layout.addWidget(self.currentPage)
 
 
 app = QtWidgets.QApplication(sys.argv)
