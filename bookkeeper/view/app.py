@@ -1,14 +1,18 @@
+"""
+Класс приложения на PyQT (view)
+"""
 import sys
 from PySide6 import QtCore, QtGui, QtWidgets
 from functools import partial
+from typing import Optional, Callable
 
-from expenses_page import expensesPage
-from categories_page import categoriesPage
-from budget_page import BudgetPage
+from bookkeeper.view.expenses_page import expensesPage
+from bookkeeper.view.categories_page import categoriesPage
+from bookkeeper.view.budget_page import BudgetPage
 
 
 class pageManagerToolbar(QtWidgets.QWidget):
-    def __init__(self, parent=None, *args, **kwargs):
+    def __init__(self, *args, parent: type | None = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.parent = parent
@@ -28,16 +32,17 @@ class pageManagerToolbar(QtWidgets.QWidget):
         self.categoriesBtn.clicked.connect(partial(self.set_page, 2))
         self.layout.addWidget(self.categoriesBtn)
 
-    def set_page(self, page_index=0):
+    def set_page(self, page_index=0) -> None:
         self.parent.page_layout.setCurrentIndex(page_index)
-        print("button was clicked: ", str(self.parent.page_layout.currentIndex()))
+        # print("button was clicked: ", str(self.parent.page_layout.currentIndex()))
 
 
 class MainWindow(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.setWindowTitle("The BookKeeper App")
+        self.setGeometry(50, 50, 800, 900)
 
         self.budget_page = BudgetPage()
         self.expenses_page = expensesPage()
@@ -56,7 +61,20 @@ class MainWindow(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
 
-app = QtWidgets.QApplication(sys.argv)
-window = MainWindow()
-window.show()
-sys.exit(app.exec())
+class View:
+    app: QtWidgets.QApplication
+    window: QtWidgets.QWidget
+
+    def __init__(self) -> None:
+        self.start_app()
+
+    def start_app(self) -> None:
+        self.app = QtWidgets.QApplication(sys.argv)
+        self.window = MainWindow()
+        self.window.show()
+        sys.exit(self.app.exec())
+
+
+if __name__ == "__main__":
+    view = View()
+    view.start_app()

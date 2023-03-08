@@ -1,41 +1,49 @@
-from PySide6 import QtCore, QtGui, QtWidgets
-from dataclasses import dataclass, field
-from datetime import datetime
+"""
+Виджет для отображения страницы списка категорий в окне приложения
+"""
+from PySide6 import QtWidgets
 
 
-categories_example = "Продукты Сладости Книги Одежда".split()
-
-
-class categoryItem(QtWidgets.QWidget):
-    def __init__(self, name, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.layout = QtWidgets.QHBoxLayout()
-        self.setLayout(self.layout)
-
-        self.category_name = QtWidgets.QLabel(name)
-        self.edit_btn = QtWidgets.QPushButton("Редактировать")
-
-        self.layout.addWidget(self.category_name)
-        self.layout.addWidget(self.edit_btn)
+categories_example = {
+    "продукты": {
+        "мясо": {
+            "сырое мясо": {},
+            "мясные продукты": {}
+        },
+        "сладости": {}
+    },
+    "книги": {},
+    "одежда": {}
+}
 
 
 class categoriesList(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.categories_title = QtWidgets.QLabel("Список категорий")
+        self.category_tree = QtWidgets.QTreeWidget()
+        self.category_tree.setHeaderLabels(["Список категорий"])
+        self.category_tree.setColumnCount(1)
+        self.build_category_tree(data=categories_example, parent=self.category_tree)
 
-        self.layout.addWidget(self.categories_title)
-        for cat in categories_example:
-            self.layout.addWidget(categoryItem(cat))
+        self.layout.addWidget(self.category_tree)
+
+    def build_category_tree(self,
+                            data: dict | None = None,
+                            parent: QtWidgets.QTreeWidgetItem | QtWidgets.QTreeWidget | None = None
+                            ) -> None:
+        for key, value in data.items():
+            item = QtWidgets.QTreeWidgetItem(parent)
+            item.setText(0, key)
+            if isinstance(value, dict):
+                self.build_category_tree(data=value, parent=item)
 
 
 class addCategoryInput(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QHBoxLayout()
@@ -52,7 +60,7 @@ class addCategoryInput(QtWidgets.QWidget):
 
 
 class elementAddCategory(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -65,7 +73,7 @@ class elementAddCategory(QtWidgets.QWidget):
 
 
 class categoriesPage(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()

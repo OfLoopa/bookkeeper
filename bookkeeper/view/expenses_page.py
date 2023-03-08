@@ -1,6 +1,8 @@
-from PySide6 import QtCore, QtGui, QtWidgets
-from dataclasses import dataclass, field
-from datetime import datetime
+"""
+Виджет для отображения страницы списка расходов в окне приложения
+"""
+from PySide6 import QtWidgets
+from dataclasses import dataclass
 
 
 expenses_example = [
@@ -22,7 +24,7 @@ class ExpenseItem:
 
 
 class expensesList(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -51,7 +53,7 @@ class expensesList(QtWidgets.QWidget):
         self.layout.addWidget(self.expenses_title)
         self.layout.addWidget(self.expenses_table)
 
-    def set_data(self, data: list[tuple]):
+    def set_data(self, data: list[tuple]) -> None:
         for i, row in enumerate(data):
             for j, x in enumerate(row):
                 self.expenses_table.setItem(
@@ -61,7 +63,7 @@ class expensesList(QtWidgets.QWidget):
 
 
 class addAmountElement(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QHBoxLayout()
@@ -75,7 +77,7 @@ class addAmountElement(QtWidgets.QWidget):
 
 
 class chooseCategoryElement(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QHBoxLayout()
@@ -92,7 +94,7 @@ class chooseCategoryElement(QtWidgets.QWidget):
 
 
 class elementAddExpense(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -108,7 +110,7 @@ class elementAddExpense(QtWidgets.QWidget):
 
 
 class expensesPage(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()

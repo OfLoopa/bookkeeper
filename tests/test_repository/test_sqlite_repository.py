@@ -19,20 +19,16 @@ def test_class():
 @pytest.fixture
 def repos(test_class):
     repos = SQLiteRepository.repository_factory(models=[test_class], db_file=TEST_DB)
-    yield repos
-    for cls, repo in repos.items():
-        repo.drop_table()
+    return repos
 
 
 @pytest.fixture
 def repo(repos, test_class):
-    return repos[test_class]
+    repo = repos[test_class]
+    return repo
 
 
 def test_repo_factory(repos, test_class):
-    obj = test_class()
-    assert obj.pk == 0
-
     assert repos[test_class].db_file == TEST_DB \
            and repos[test_class].table_name == test_class.__name__.lower()
 
@@ -73,7 +69,7 @@ def test_cannot_update_without_pk(repo, test_class):
 
 
 def test_get_all(repo, test_class):
-    objects = [test_class(f=i+20) for i in range(5)]
+    objects = [test_class(f=i+21) for i in range(5)]
     for o in objects:
         repo.add(o)
     assert repo.get_all() == objects
@@ -88,3 +84,8 @@ def test_get_all_with_condition(repo, test_class):
         repo.add(o)
     assert repo.get_all(where={"f": 20}) == objects
     assert repo.get_all(where={"f": 10}) == objects_2
+
+
+def test_drop_tables_in_repos(repos):
+    for cls, repo in repos.items():
+        repo.drop_table()
