@@ -4,37 +4,6 @@
 from PySide6 import QtWidgets, QtCore
 from typing import Callable, Optional
 
-from bookkeeper.utils import set_elem_in_tree, delete_elem_from_tree, get_elem_in_tree, get_elem_parent
-
-
-categories_example = {
-    1: {
-        "name": "продукты",
-        2: {
-            "name": "мясо",
-            3: {
-                "name": "сырое мясо"
-            },
-            4: {
-                "name": "мясные продукты"
-            }
-        },
-        5: {
-            "name": "сладости"
-        }
-    },
-    6: {
-        "name": "книги"
-    },
-    7: {
-        "name": "одежда"
-    }
-}
-
-
-def get_example():
-    return categories_example
-
 
 class categoriesList(QtWidgets.QWidget):
     """
@@ -44,7 +13,7 @@ class categoriesList(QtWidgets.QWidget):
     которая будет возвращать дерево для отображения
     (json-like объект)
     """
-    def __init__(self, *args, category_getter: Optional[Callable] = get_example, **kwargs) -> None:
+    def __init__(self, *args, category_getter: Optional[Callable], **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.getter = category_getter
 
@@ -217,41 +186,25 @@ class elementDeleteCategory(QtWidgets.QWidget):
 
 
 class categoriesPage(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args,
+                 get_handler: Optional[Callable],
+                 add_handler: Optional[Callable],
+                 edit_handler: Optional[Callable],
+                 delete_handler: Optional[Callable],
+                 **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.categories_list = categoriesList()
+        self.categories_list = categoriesList(category_getter=get_handler)
         self.layout.addWidget(self.categories_list)
 
-        self.add_category = elementAddCategory(adder=self.setter_example)
+        self.add_category = elementAddCategory(adder=add_handler)
         self.layout.addWidget(self.add_category)
 
-        self.edit_category = elementEditCategory(editor=self.editor_example)
+        self.edit_category = elementEditCategory(editor=edit_handler)
         self.layout.addWidget(self.edit_category)
 
-        self.delete_category = elementDeleteCategory(deleter=self.deleter_example)
+        self.delete_category = elementDeleteCategory(deleter=delete_handler)
         self.layout.addWidget(self.delete_category)
-
-    def setter_example(self, category_name, parent_id):
-        if parent_id == "":
-            categories_example[8] = {"name": category_name}
-        else:
-            set_elem_in_tree(categories_example, [category_name, int(parent_id), 8])
-        self.categories_list.set_tree(category_tree_getter=get_example)
-
-    def editor_example(self, category_id, new_name, new_parent_id):
-        parent_id = get_elem_parent(categories_example, category_id)
-        if new_parent_id == "":
-            set_elem_in_tree(categories_example, [new_name, parent_id, int(category_id)])
-        else:
-            delete_elem_from_tree(categories_example, int(category_id))
-            set_elem_in_tree(categories_example, [new_name, int(new_parent_id), int(category_id)])
-        self.categories_list.set_tree(category_tree_getter=get_example)
-
-    def deleter_example(self, category_id):
-        if category_id != "":
-            delete_elem_from_tree(categories_example, int(category_id))
-        self.categories_list.set_tree(category_tree_getter=get_example)

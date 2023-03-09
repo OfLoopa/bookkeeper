@@ -99,19 +99,19 @@ def get_elem_parent(tree: dict, pk: int, prev_parent: int = None) -> int:
             return prev_parent
 
 
-def set_elem_in_tree(tree: dict, elem: list[str, int | None, int]) -> None:
+def set_elem_in_tree(tree: dict, elem: list[type]) -> None:
     """
     Функция по заданной записи вида (имя, родительский id, id) меняет элемент в дереве
     """
-    if elem[1] is None:
-        tree[elem[2]] = {"name": elem[0]}
+    if elem.parent is None:
+        tree[elem.pk] = {"name": elem.name}
     else:
         if isinstance(tree, dict):
             for key, value in tree.items():
-                if key != elem[1]:
+                if key != elem.parent:
                     set_elem_in_tree(value, elem)
                 else:
-                    value[elem[2]] = {"name": elem[0]}
+                    value[elem.pk] = {"name": elem.name}
                     break
 
 

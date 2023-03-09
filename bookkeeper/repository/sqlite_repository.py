@@ -118,7 +118,14 @@ class SQLiteRepository(AbstractRepository[T]):
             cur = con.cursor()
             sql_query = f"UPDATE {self.table_name} SET "
             sql_query += ','.join(
-                [f"{attr} = {val}" for attr, val in obj.__dict__.items() if attr != 'pk']
+                [f"{attr} = {val}"
+                 for attr, val in obj.__dict__.items()
+                 if attr != 'pk' and val is not None
+                 and isinstance(val, int) or isinstance(val, float)] +
+                [f"{attr} = '{val}'"
+                 for attr, val in obj.__dict__.items()
+                 if attr != 'pk' and val is not None
+                 and not (isinstance(val, int) or isinstance(val, float))]
             )
             sql_query += f" WHERE pk={obj.pk}"
             cur.execute(sql_query)
