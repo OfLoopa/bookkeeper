@@ -80,28 +80,38 @@ class pageManagerToolbar(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QWidget):
-    get_handler: Optional[Callable]
-    add_handler: Optional[Callable]
-    edit_handler: Optional[Callable]
-    delete_handler: Optional[Callable]
+    get_category_handler: Optional[Callable]
+    add_category_handler: Optional[Callable]
+    edit_category_handler: Optional[Callable]
+    delete_category_handler: Optional[Callable]
+
+    get_expenses_handler: Optional[Callable]
+    get_categories_handler: Optional[Callable]
+    add_expense_handler: Optional[Callable]
 
     def __init__(self, *args,
                  category_handlers: list[Optional[Callable]],
+                 expenses_handlers: list[Optional[Callable]],
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.register_category_handlers(category_handlers)
+        self.register_expenses_handlers(expenses_handlers)
 
         self.setWindowTitle("The BookKeeper App")
         self.setGeometry(50, 50, 800, 900)
 
         self.budget_page = BudgetPage()
-        self.expenses_page = expensesPage()
+        self.expenses_page = expensesPage(
+            get_handler=self.get_expenses_handler,
+            get_categories_handler=self.get_categories_handler,
+            add_handler=self.add_expense_handler,
+        )
         self.categories_page = categoriesPage(
-            get_handler=self.get_handler,
-            add_handler=self.add_handler,
-            edit_handler=self.edit_handler,
-            delete_handler=self.delete_handler
+            get_handler=self.get_category_handler,
+            add_handler=self.add_category_handler,
+            edit_handler=self.edit_category_handler,
+            delete_handler=self.delete_category_handler
         )
         self.menuBarWidget = pageManagerToolbar(parent=self)
 
@@ -117,27 +127,41 @@ class MainWindow(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
     def register_category_handlers(self, handlers: list[Optional[Callable]]) -> None:
-        self.get_handler = handlers[0]
-        self.add_handler = handlers[1]
-        self.edit_handler = handlers[2]
-        self.delete_handler = handlers[3]
+        self.get_category_handler = handlers[0]
+        self.add_category_handler = handlers[1]
+        self.edit_category_handler = handlers[2]
+        self.delete_category_handler = handlers[3]
+
+    def register_expenses_handlers(self, handlers: list[Optional[Callable]]) -> None:
+        self.get_expenses_handler = handlers[0]
+        self.get_categories_handler = handlers[1]
+        self.add_expense_handler = handlers[2]
 
 
 class View:
     app: QtWidgets.QApplication
     window: MainWindow
     category_handlers: list[Optional[Callable]]
+    expenses_handlers: list[Optional[Callable]]
 
     def __init__(self) -> None:
         self.app = QtWidgets.QApplication(sys.argv)
 
     def start_app(self) -> None:
         self.window = MainWindow(
-            category_handlers=self.category_handlers
+            category_handlers=self.category_handlers,
+            expenses_handlers=self.expenses_handlers
         )
         self.window.show()
         sys.exit(self.app.exec())
 
+    def register_handlers(self, handlers_obj: dict[str, list[Optional[Callable]]] | None = None):
+        if handlers_obj is None:
+            handlers_obj = self.register_example_handlers()
+        self.category_handlers = handlers_obj["category"]
+        self.expenses_handlers = handlers_obj["expenses"]
+
+    # Test View handlers
     def setter_example(self, category_name, parent_id):
         if parent_id == "":
             categories_example[8] = {"name": category_name}
@@ -163,11 +187,6 @@ class View:
         return {
             "category": [get_example, self.setter_example, self.editor_example, self.deleter_example]
         }
-
-    def register_handlers(self, handlers_obj: dict[str, list[Optional[Callable]]] | None = None):
-        if handlers_obj is None:
-            handlers_obj = self.register_example_handlers()
-        self.category_handlers = handlers_obj["category"]
 
 
 if __name__ == "__main__":

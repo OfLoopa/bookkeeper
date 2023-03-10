@@ -61,6 +61,11 @@ class Bookkeeper:
                 self.add_new_category,
                 self.edit_existing_category,
                 self.delete_category
+            ],
+            "expenses": [
+                self.get_expenses,
+                self.get_categories_list,
+                self.add_expense
             ]
         }
         return handlers_dist
@@ -76,6 +81,8 @@ class Bookkeeper:
         else:
             self.cat_repo.add(Category(name=category_name, parent=int(parent_id)))
         self.view.window.categories_page.categories_list.set_tree(category_tree_getter=self.get_category_tree)
+        self.view.window.expenses_page.add_expense.choose_category.update_categories(
+            category_list_getter=self.get_categories_list)
 
     def edit_existing_category(self, category_id, new_name, new_parent_id) -> None:
         if new_parent_id == "":
@@ -83,10 +90,29 @@ class Bookkeeper:
         else:
             self.cat_repo.update(Category(name=new_name, parent=int(new_parent_id), pk=int(category_id)))
         self.view.window.categories_page.categories_list.set_tree(category_tree_getter=self.get_category_tree)
+        self.view.window.expenses_page.add_expense.choose_category.update_categories(
+            category_list_getter=self.get_categories_list)
 
     def delete_category(self, category_id) -> None:
         self.cat_repo.delete(int(category_id))
         self.view.window.categories_page.categories_list.set_tree(category_tree_getter=self.get_category_tree)
+        self.view.window.expenses_page.add_expense.choose_category.update_categories(
+            category_list_getter=self.get_categories_list)
+
+    def get_expenses(self) -> list[Expense]:
+        expenses = self.expenses_repo.get_all()
+        return expenses
+
+    def add_expense(self, amount, date, category) -> None:
+        self.expenses_repo.add(Expense(amount=float(amount), category=category, expense_date=date))
+        self.view.window.expenses_page.expenses_list.set_expenses(expenses_getter=self.get_expenses)
+
+    def get_categories_list(self) -> list[str]:
+        categories_list = self.cat_repo.get_all()
+        categories = []
+        for category in categories_list:
+            categories.append(category.name)
+        return categories
 
 
 if __name__ == "__main__":
