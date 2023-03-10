@@ -76,9 +76,10 @@ class addCategoryInput(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def save_btn_clicked(self):
-        print("add")
         new_category_name = self.input_category_name.text()
-        parent_id = self.input_parent_id.text()
+        parent_text = self.input_parent_id.text()
+        parent_id = int(parent_text) if parent_text != "" else None
+        print("add new category: ", new_category_name, " with parent ", parent_id)
         self.adder(new_category_name, parent_id)
 
 
@@ -112,10 +113,13 @@ class editCategoryInput(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def save_btn_clicked(self):
-        print("edit")
-        category_id = self.input_id_category.text()
+        category_id = int(self.input_id_category.text())
         new_category_name = self.input_category_name.text()
-        new_parent_id = self.input_parent_id.text()
+        new_id = self.input_parent_id.text()
+        new_parent_id = int(new_id) if new_id != "" else None
+        print("edit category: ", category_id,
+              " with new name ", new_category_name,
+              " and parent_id ", new_parent_id)
         self.editor(category_id, new_category_name, new_parent_id)
 
 
@@ -141,8 +145,8 @@ class deleteCategoryInput(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def delete_btn_clicked(self):
-        print("delete")
-        category_id = self.input_id_category.text()
+        category_id = int(self.input_id_category.text())
+        print("delete category: ", category_id)
         self.deleter(category_id)
 
 

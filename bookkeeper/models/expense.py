@@ -19,7 +19,7 @@ class Expense:
     """
     amount: float
     category: str
-    expense_date: str
-    added_date: str = datetime.now().isoformat(sep=' ')
+    expense_date: datetime = datetime.now()
+    added_date: datetime = datetime.now()
     comment: str = ''
     pk: int = 0

@@ -1,6 +1,7 @@
 """
 Виджет для отображения страницы списка расходов в окне приложения
 """
+from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 from dataclasses import dataclass
 from typing import Callable, Optional
@@ -54,11 +55,11 @@ class expensesList(QtWidgets.QWidget):
         for i, row in enumerate(data):
             self.expenses_table.setItem(
                 i, 0,
-                QtWidgets.QTableWidgetItem(str(row.expense_date).capitalize())
+                QtWidgets.QTableWidgetItem(datetime.strptime(row.expense_date, "%Y-%m-%d %H:%M:%S").strftime("%d-%m-%Y"))
             )
             self.expenses_table.setItem(
                 i, 1,
-                QtWidgets.QTableWidgetItem(str(row.amount).capitalize())
+                QtWidgets.QTableWidgetItem(str(row.amount))
             )
             self.expenses_table.setItem(
                 i, 2,
@@ -66,7 +67,7 @@ class expensesList(QtWidgets.QWidget):
             )
             self.expenses_table.setItem(
                 i, 3,
-                QtWidgets.QTableWidgetItem(str(row.comment).capitalize())
+                QtWidgets.QTableWidgetItem(str(row.comment))
             )
 
     def set_expenses(self, expenses_getter: Callable) -> None:
@@ -97,15 +98,19 @@ class expensesList(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def table_item_changed(self, item):
-        print("table item changed")
         table_position = self.expenses_table.indexFromItem(item)
         row, column = table_position.row(), table_position.column()
 
         pk = column + 1
-        amount = self.expenses_table.item(row, 1).text()
+        amount = float(self.expenses_table.item(row, 1).text())
         category = self.expenses_table.item(row, 2).text()
-        expense_date = self.expenses_table.item(row, 0).text()
+        expense_date = datetime.strptime(self.expenses_table.item(row, 0).text(), "%d-%m-%Y")
         comment = self.expenses_table.item(row, 3).text()
+        print("table item changed: ",
+              pk, " with amount ", amount,
+              " and category ", category,
+              " and expense date ", expense_date,
+              " and comment ", comment)
         self.editor(pk, amount, category, expense_date, comment)
 
 
@@ -119,9 +124,12 @@ class addAmountElement(QtWidgets.QWidget):
         self.add_amount_input = QtWidgets.QLineEdit()
         self.add_amount_input.setPlaceholderText('Введите сумму, которую вы потратили')
         self.add_expense_date = QtWidgets.QLineEdit()
-        self.add_expense_date.setPlaceholderText('Введите дату совершения покупки')
+        self.add_expense_date.setPlaceholderText(
+            'Формат: day-month-year'
+        )
 
         self.layout.addWidget(self.add_amount_input)
+        self.layout.addWidget(QtWidgets.QLabel("Дата покупки"))
         self.layout.addWidget(self.add_expense_date)
 
 
@@ -190,11 +198,13 @@ class elementAddExpense(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def save_btn_clicked(self):
-        print("add expense")
-        amount = self.add_amount.add_amount_input.text()
-        date = self.add_amount.add_expense_date.text()
+        amount = float(self.add_amount.add_amount_input.text())
+        date = datetime.strptime(self.add_amount.add_expense_date.text(), "%d-%m-%Y")
         category = self.choose_category.category_box.currentText()
         comment = self.add_comment.add_comment_input.toPlainText()
+        print("add expense:\namount ", amount,
+              " date ", date, " category ", category,
+              " comment ", comment)
         self.adder(amount, date, category, comment)
 
 
