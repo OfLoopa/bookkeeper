@@ -3,10 +3,10 @@
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, time
 
 
-@dataclass(slots=True)
+@dataclass
 class Expense:
     """
     Расходная операция.
@@ -20,6 +20,6 @@ class Expense:
     amount: float
     category: str
     expense_date: str
-    added_date: datetime = field(default_factory=datetime.now)
+    added_date: str = datetime.now().isoformat(sep=' ')
     comment: str = ''
     pk: int = 0

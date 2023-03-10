@@ -88,6 +88,7 @@ class MainWindow(QtWidgets.QWidget):
     get_expenses_handler: Optional[Callable]
     get_categories_handler: Optional[Callable]
     add_expense_handler: Optional[Callable]
+    edit_expense_handler: Optional[Callable]
 
     def __init__(self, *args,
                  category_handlers: list[Optional[Callable]],
@@ -106,6 +107,7 @@ class MainWindow(QtWidgets.QWidget):
             get_handler=self.get_expenses_handler,
             get_categories_handler=self.get_categories_handler,
             add_handler=self.add_expense_handler,
+            edit_handler=self.edit_category_handler
         )
         self.categories_page = categoriesPage(
             get_handler=self.get_category_handler,
@@ -136,6 +138,7 @@ class MainWindow(QtWidgets.QWidget):
         self.get_expenses_handler = handlers[0]
         self.get_categories_handler = handlers[1]
         self.add_expense_handler = handlers[2]
+        self.edit_category_handler = handlers[3]
 
 
 class View:

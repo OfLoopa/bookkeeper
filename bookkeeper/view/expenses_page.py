@@ -20,8 +20,11 @@ categories_example = "Продукты Сладости Книги Одежда"
 class expensesList(QtWidgets.QWidget):
     def __init__(self, *args,
                  expenses_getter: Optional[Callable],
+                 expenses_editor: Optional[Callable],
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
+
+        self.editor = expenses_editor
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
@@ -51,15 +54,15 @@ class expensesList(QtWidgets.QWidget):
         for i, row in enumerate(data):
             self.expenses_table.setItem(
                 i, 0,
-                QtWidgets.QTableWidgetItem(str(row.amount).capitalize())
+                QtWidgets.QTableWidgetItem(str(row.expense_date).capitalize())
             )
             self.expenses_table.setItem(
                 i, 1,
-                QtWidgets.QTableWidgetItem(str(row.category).capitalize())
+                QtWidgets.QTableWidgetItem(str(row.amount).capitalize())
             )
             self.expenses_table.setItem(
                 i, 2,
-                QtWidgets.QTableWidgetItem(str(row.expense_date).capitalize())
+                QtWidgets.QTableWidgetItem(str(row.category).capitalize())
             )
             self.expenses_table.setItem(
                 i, 3,
@@ -89,15 +92,21 @@ class expensesList(QtWidgets.QWidget):
             3, QtWidgets.QHeaderView.Stretch)
 
         self.build_expenses(expenses_data)
-        # self.expenses_table.itemChanged.connect(self.table_item_changed)
+        self.expenses_table.itemChanged.connect(self.table_item_changed)
         self.layout.addWidget(self.expenses_table)
 
-    # @QtCore.Slot()
-    # def table_item_changed(self):
-    #     print("table item changed")
-    #     self.expenses_table.itemChanged.
-    #     self.expenses_table.itemChanged.text()
-    #     self.editor()
+    @QtCore.Slot()
+    def table_item_changed(self, item):
+        print("table item changed")
+        table_position = self.expenses_table.indexFromItem(item)
+        row, column = table_position.row(), table_position.column()
+
+        pk = column + 1
+        amount = self.expenses_table.item(row, 1).text()
+        category = self.expenses_table.item(row, 2).text()
+        expense_date = self.expenses_table.item(row, 0).text()
+        comment = self.expenses_table.item(row, 3).text()
+        self.editor(pk, amount, category, expense_date, comment)
 
 
 class addAmountElement(QtWidgets.QWidget):
@@ -132,11 +141,25 @@ class chooseCategoryElement(QtWidgets.QWidget):
     def update_categories(self, category_list_getter: Callable) -> None:
         self.category_box.setParent(None)
 
+        self.category_box = QtWidgets.QComboBox()
         categories = category_list_getter()
         for category in categories:
             self.category_box.addItem(category)
 
         self.layout.addWidget(self.category_box)
+
+
+class addCommentElement(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.layout = QtWidgets.QHBoxLayout()
+        self.setLayout(self.layout)
+
+        self.add_comment_input = QtWidgets.QTextEdit()
+        self.add_comment_input.setPlaceholderText('Введите комментарий')
+
+        self.layout.addWidget(self.add_comment_input)
 
 
 class elementAddExpense(QtWidgets.QWidget):
@@ -157,10 +180,12 @@ class elementAddExpense(QtWidgets.QWidget):
 
         self.add_amount = addAmountElement()
         self.choose_category = chooseCategoryElement(category_list_getter=get_category_list)
+        self.add_comment = addCommentElement()
 
         self.layout.addWidget(self.add_expense_title)
         self.layout.addWidget(self.add_amount)
         self.layout.addWidget(self.choose_category)
+        self.layout.addWidget(self.add_comment)
         self.layout.addWidget(self.add_btn)
 
     @QtCore.Slot()
@@ -169,7 +194,8 @@ class elementAddExpense(QtWidgets.QWidget):
         amount = self.add_amount.add_amount_input.text()
         date = self.add_amount.add_expense_date.text()
         category = self.choose_category.category_box.currentText()
-        self.adder(amount, date, category)
+        comment = self.add_comment.add_comment_input.toPlainText()
+        self.adder(amount, date, category, comment)
 
 
 class expensesPage(QtWidgets.QWidget):
@@ -177,13 +203,14 @@ class expensesPage(QtWidgets.QWidget):
                  get_handler: Optional[Callable],
                  get_categories_handler: Optional[Callable],
                  add_handler: Optional[Callable],
+                 edit_handler: Optional[Callable],
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.expenses_list = expensesList(expenses_getter=get_handler)
+        self.expenses_list = expensesList(expenses_getter=get_handler, expenses_editor=edit_handler)
         self.layout.addWidget(self.expenses_list)
 
         self.add_expense = elementAddExpense(get_category_list=get_categories_handler, adder=add_handler)

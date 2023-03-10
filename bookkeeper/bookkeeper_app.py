@@ -65,7 +65,8 @@ class Bookkeeper:
             "expenses": [
                 self.get_expenses,
                 self.get_categories_list,
-                self.add_expense
+                self.add_expense,
+                self.edit_expenses
             ]
         }
         return handlers_dist
@@ -103,8 +104,13 @@ class Bookkeeper:
         expenses = self.expenses_repo.get_all()
         return expenses
 
-    def add_expense(self, amount, date, category) -> None:
-        self.expenses_repo.add(Expense(amount=float(amount), category=category, expense_date=date))
+    def edit_expenses(self, pk, amount, category, expense_date, comment) -> None:
+        edit_expense = Expense(
+            pk=int(pk), amount=float(amount), category=category, expense_date=expense_date, comment=comment)
+        self.expenses_repo.update(edit_expense)
+
+    def add_expense(self, amount, date, category, comment) -> None:
+        self.expenses_repo.add(Expense(amount=float(amount), category=category, expense_date=date, comment=comment))
         self.view.window.expenses_page.expenses_list.set_expenses(expenses_getter=self.get_expenses)
 
     def get_categories_list(self) -> list[str]:
