@@ -1,5 +1,6 @@
-import datetime
+from datetime import datetime, timedelta
 from typing import Protocol, Callable, Optional
+from dateutil import relativedelta
 
 from bookkeeper.view.app import View
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
@@ -7,6 +8,7 @@ from bookkeeper.models.category import Category
 from bookkeeper.models.budget import Budget
 from bookkeeper.models.expense import Expense
 from bookkeeper.utils import build_dict_tree_from_list
+from bookkeeper.repository.abstract_repository import AbstractRepository
 
 categories_example = [
     ["продукты", None, 1],
@@ -45,7 +47,7 @@ class Bookkeeper:
 
     def __init__(self,
                  view: AbstractView,
-                 repository_factory: type):
+                 repository_factory: dict[type, AbstractRepository]):
         self.view = view
         self.view.register_handlers(self.get_handlers())
         self.repository_factory = repository_factory
@@ -69,6 +71,10 @@ class Bookkeeper:
                 self.get_categories_list,
                 self.add_expense,
                 self.edit_expenses
+            ],
+            "budget": [
+                self.get_budget,
+                self.set_budget
             ]
         }
         return handlers_dist
@@ -102,12 +108,12 @@ class Bookkeeper:
         expenses = self.expenses_repo.get_all()
         return expenses
 
-    def edit_expenses(self, pk: int, amount: float, category: str, expense_date: datetime.datetime, comment: str) -> None:
+    def edit_expenses(self, pk: int, amount: float, category: str, expense_date: datetime, comment: str) -> None:
         edit_expense = Expense(
             pk=pk, amount=amount, category=category, expense_date=expense_date, comment=comment)
         self.expenses_repo.update(edit_expense)
 
-    def add_expense(self, amount: float, date: datetime.datetime, category: str, comment: str) -> None:
+    def add_expense(self, amount: float, date: datetime, category: str, comment: str) -> None:
         self.expenses_repo.add(Expense(amount=amount, category=category, expense_date=date, comment=comment))
         self.view.window.expenses_page.expenses_list.set_expenses(expenses_getter=self.get_expenses)
 
@@ -117,6 +123,43 @@ class Bookkeeper:
         for category in categories_list:
             categories.append(category.name)
         return categories
+
+    def get_budget(self) -> list[Budget]:
+        day_budgets = self.budget_repo.get_all(
+            subquery="WHERE expiration_date=(SELECT MAX(expiration_date) FROM budget WHERE duration='День')")
+        week_budgets = self.budget_repo.get_all(
+            subquery="WHERE expiration_date=(SELECT MAX(expiration_date) FROM budget WHERE duration='Неделя')")
+        month_budgets = self.budget_repo.get_all(
+            subquery="WHERE expiration_date=(SELECT MAX(expiration_date) FROM budget WHERE duration='Месяц')")
+        return day_budgets + week_budgets + month_budgets
+
+    def set_budget(self, amount: float, duration: str) -> None:
+        if duration == "День":
+            expiration_date = datetime.now() + timedelta(days=1)
+        elif duration == "Неделя":
+            expiration_date = datetime.now() + timedelta(weeks=1)
+        elif duration == "Месяц":
+            expiration_date = datetime.now() + relativedelta.relativedelta(months=1)
+        else:
+            raise ValueError("Wrong duration, set День/Неделя/Месяц")
+        budget = Budget(amount=0.0, limits=amount, duration=duration, expiration_date=expiration_date)
+        self.budget_repo.add(budget)
+        self.view.window.budget_page.budget_window.set_budgets(budgets_getter=self.get_budget)
+
+    def get_budgets_with_appropriate_period(self, date: datetime) -> list[Budget]:
+        date_str = date.strftime("%Y-%m-%d %H:%M:%S")
+        budgets = self.budget_repo.get_all(
+            subquery=f"WHERE start_date < '{date_str}' AND expiration_date >= '{date_str}'"
+        )
+        return budgets
+
+    def update_budgets(self, value: float, date: datetime) -> None:
+        budgets = self.get_budgets_with_appropriate_period(date=date)
+        for budget in budgets:
+            budget.amount += value
+            self.budget_repo.update(budget)
+
+        self.view.window.budget_page.budget_window.set_budgets(budgets_getter=self.get_budget)
 
 
 if __name__ == "__main__":

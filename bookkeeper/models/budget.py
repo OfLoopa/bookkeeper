@@ -14,7 +14,9 @@ class Budget:
     pk - id записи в базе данных
     """
 
-    category: int
-    amount: int
-    duration: datetime = field(default_factory=datetime.now)
+    amount: float
+    limits: float
+    duration: str
+    expiration_date: datetime
+    start_date: datetime = datetime.now()
     pk: int = 0

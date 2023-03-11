@@ -97,14 +97,24 @@ class SQLiteRepository(AbstractRepository[T]):
         con.close()
         return res
 
-    def get_all(self, where: dict[str, Any] | None = None) -> list[Optional[T]]:
+    def get_all(self, where: dict[str, Any] | None = None, subquery: str | None = None) -> list[Optional[T]]:
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             query = f"SELECT * FROM {self.table_name}"
             if where is not None:
-                query += " WHERE " + ', '.join(
-                    [f"{key} = {value}" for key, value in where.items()]
+                query += " WHERE " + ' AND '.join(
+                    [f"{key} = {value}"
+                     for key, value in where.items()
+                     if value is not None
+                     and isinstance(value, int) or isinstance(value, float)] +
+                    [f"{key} = '{value}'"
+                     for key, value in where.items()
+                     if value is not None
+                     and not (isinstance(value, int) or isinstance(value, float))]
                 )
+            if subquery is not None:
+                query += " " + subquery
+
             raw_res = cur.execute(query)
             res = raw_res.fetchall()
         con.close()

@@ -101,7 +101,7 @@ class expensesList(QtWidgets.QWidget):
         table_position = self.expenses_table.indexFromItem(item)
         row, column = table_position.row(), table_position.column()
 
-        pk = column + 1
+        pk = row + 1
         amount = float(self.expenses_table.item(row, 1).text())
         category = self.expenses_table.item(row, 2).text()
         expense_date = datetime.strptime(self.expenses_table.item(row, 0).text(), "%d-%m-%Y")

@@ -1,19 +1,20 @@
 """
 Виджет для отображения страницы просмотра и задания бюджета в окне приложения
 """
-from PySide6 import QtWidgets
+from typing import Optional, Callable
 
+from PySide6 import QtWidgets, QtCore
 
-budget_example = [
-    ('День', 705.43, 1000),
-    ('Неделя', 6719.2, 7000),
-    ('Месяц', 10592.96, 30000),
-]
+from bookkeeper.models.budget import Budget
 
 
 class setBudgetInput(QtWidgets.QWidget):
-    def __init__(self, name, *args, **kwargs) -> None:
+    def __init__(self, name, *args,
+                 budget_setter: Optional[Callable],
+                 **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.duration = name
+        self.setter = budget_setter
 
         self.layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.layout)
@@ -21,28 +22,37 @@ class setBudgetInput(QtWidgets.QWidget):
         self.period = QtWidgets.QLabel(name)
         self.input = QtWidgets.QLineEdit()
         self.save_btn = QtWidgets.QPushButton("Сохранить")
+        self.save_btn.clicked.connect(self.save_btn_clicked)
 
         self.layout.addWidget(self.period)
         self.layout.addWidget(self.input)
         self.layout.addWidget(self.save_btn)
 
+    @QtCore.Slot()
+    def save_btn_clicked(self) -> None:
+        limit = float(self.input.text())
+        self.setter(limit, self.duration)
+
 
 class BudgetWindow(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args,
+                 budgets_getter: Optional[Callable],
+                 **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
         self.budget_window_title = QtWidgets.QLabel("Бюджет")
+        self.layout.addWidget(self.budget_window_title)
 
-        self.expenses_table = QtWidgets.QTableWidget(3, 3)
-        self.expenses_table.setColumnCount(3)
-        self.expenses_table.setRowCount(3)
-        self.expenses_table.setHorizontalHeaderLabels(
+        self.budgets_table = QtWidgets.QTableWidget(3, 3)
+        self.budgets_table.setColumnCount(3)
+        self.budgets_table.setRowCount(3)
+        self.budgets_table.setHorizontalHeaderLabels(
             ["", "Сумма", "Бюджет"]
         )
-        self.header = self.expenses_table.horizontalHeader()
+        self.header = self.budgets_table.horizontalHeader()
         self.header.setSectionResizeMode(
             0, QtWidgets.QHeaderView.ResizeToContents)
         self.header.setSectionResizeMode(
@@ -50,22 +60,51 @@ class BudgetWindow(QtWidgets.QWidget):
         self.header.setSectionResizeMode(
             2, QtWidgets.QHeaderView.Stretch)
 
-        self.set_data(budget_example)
+        self.set_budgets(budgets_getter)
 
-        self.layout.addWidget(self.budget_window_title)
-        self.layout.addWidget(self.expenses_table)
-
-    def set_data(self, data: list[tuple]) -> None:
+    def build_budgets(self, data: list[Budget]) -> None:
         for i, row in enumerate(data):
-            for j, x in enumerate(row):
-                self.expenses_table.setItem(
-                    i, j,
-                    QtWidgets.QTableWidgetItem(str(x).capitalize())
-                )
+            self.budgets_table.setItem(
+                i, 0,
+                QtWidgets.QTableWidgetItem(row.duration)
+            )
+            self.budgets_table.setItem(
+                i, 1,
+                QtWidgets.QTableWidgetItem(str(row.amount))
+            )
+            self.budgets_table.setItem(
+                i, 2,
+                QtWidgets.QTableWidgetItem(str(row.limits))
+            )
+
+    def set_budgets(self, budgets_getter: Callable) -> None:
+        if self.budgets_table.itemAt(0, 0) is not None:
+            self.budgets_table.setParent(None)
+
+        budgets_data = budgets_getter()
+
+        self.budgets_table = QtWidgets.QTableWidget(3, 3)
+        self.budgets_table.setColumnCount(3)
+        self.budgets_table.setRowCount(3)
+        self.budgets_table.setHorizontalHeaderLabels(
+            ["", "Сумма", "Бюджет"]
+        )
+        self.header = self.budgets_table.horizontalHeader()
+        self.header.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.ResizeToContents)
+        self.header.setSectionResizeMode(
+            1, QtWidgets.QHeaderView.Stretch)
+        self.header.setSectionResizeMode(
+            2, QtWidgets.QHeaderView.Stretch)
+
+        self.build_budgets(budgets_data)
+        self.layout.addWidget(self.budgets_table)
 
 
 class ChangeBudgetWindow(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args,
+                 budgets_setter: Optional[Callable],
+                 **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -74,9 +113,9 @@ class ChangeBudgetWindow(QtWidgets.QWidget):
         self.change_budget_window_title = QtWidgets.QLabel("Задать Бюджет")
 
         self.layout.addWidget(self.change_budget_window_title)
-        self.layout.addWidget(setBudgetInput("День"))
-        self.layout.addWidget(setBudgetInput("Неделя"))
-        self.layout.addWidget(setBudgetInput("Месяц"))
+        self.layout.addWidget(setBudgetInput(name="День", budget_setter=budgets_setter))
+        self.layout.addWidget(setBudgetInput(name="Неделя", budget_setter=budgets_setter))
+        self.layout.addWidget(setBudgetInput(name="Месяц", budget_setter=budgets_setter))
 
 
 class BudgetInfoWindow(QtWidgets.QWidget):
@@ -104,16 +143,19 @@ class BudgetInfoWindow(QtWidgets.QWidget):
 
 
 class BudgetPage(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args,
+                 get_handler: Optional[Callable],
+                 set_handler: Optional[Callable],
+                 **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.budget_window = BudgetWindow()
+        self.budget_window = BudgetWindow(budgets_getter=get_handler)
         self.layout.addWidget(self.budget_window)
 
-        self.change_budget_window = ChangeBudgetWindow()
+        self.change_budget_window = ChangeBudgetWindow(budgets_setter=set_handler)
         self.layout.addWidget(self.change_budget_window)
 
         self.budget_info = BudgetInfoWindow()

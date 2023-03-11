@@ -90,24 +90,32 @@ class MainWindow(QtWidgets.QWidget):
     add_expense_handler: Optional[Callable]
     edit_expense_handler: Optional[Callable]
 
+    get_budgets_handler: Optional[Callable]
+    set_budgets_handler: Optional[Callable]
+
     def __init__(self, *args,
                  category_handlers: list[Optional[Callable]],
                  expenses_handlers: list[Optional[Callable]],
+                 budgets_handlers: list[Optional[Callable]],
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.register_category_handlers(category_handlers)
         self.register_expenses_handlers(expenses_handlers)
+        self.register_budgets_handlers(budgets_handlers)
 
         self.setWindowTitle("The BookKeeper App")
         self.setGeometry(50, 50, 800, 900)
 
-        self.budget_page = BudgetPage()
+        self.budget_page = BudgetPage(
+            get_handler=self.get_budgets_handler,
+            set_handler=self.set_budgets_handler
+        )
         self.expenses_page = expensesPage(
             get_handler=self.get_expenses_handler,
             get_categories_handler=self.get_categories_handler,
             add_handler=self.add_expense_handler,
-            edit_handler=self.edit_category_handler
+            edit_handler=self.edit_expense_handler
         )
         self.categories_page = categoriesPage(
             get_handler=self.get_category_handler,
@@ -138,7 +146,11 @@ class MainWindow(QtWidgets.QWidget):
         self.get_expenses_handler = handlers[0]
         self.get_categories_handler = handlers[1]
         self.add_expense_handler = handlers[2]
-        self.edit_category_handler = handlers[3]
+        self.edit_expense_handler = handlers[3]
+
+    def register_budgets_handlers(self, handlers: list[Optional[Callable]]) -> None:
+        self.get_budgets_handler = handlers[0]
+        self.set_budgets_handler = handlers[1]
 
 
 class View:
@@ -146,6 +158,7 @@ class View:
     window: MainWindow
     category_handlers: list[Optional[Callable]]
     expenses_handlers: list[Optional[Callable]]
+    budgets_handlers: list[Optional[Callable]]
 
     def __init__(self) -> None:
         self.app = QtWidgets.QApplication(sys.argv)
@@ -153,7 +166,8 @@ class View:
     def start_app(self) -> None:
         self.window = MainWindow(
             category_handlers=self.category_handlers,
-            expenses_handlers=self.expenses_handlers
+            expenses_handlers=self.expenses_handlers,
+            budgets_handlers=self.budgets_handlers
         )
         self.window.show()
         sys.exit(self.app.exec())
@@ -163,6 +177,7 @@ class View:
             handlers_obj = self.register_example_handlers()
         self.category_handlers = handlers_obj["category"]
         self.expenses_handlers = handlers_obj["expenses"]
+        self.budgets_handlers = handlers_obj["budget"]
 
     # Test View handlers
     def setter_example(self, category_name, parent_id):
