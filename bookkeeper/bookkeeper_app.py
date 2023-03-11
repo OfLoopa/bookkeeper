@@ -135,6 +135,14 @@ class Bookkeeper:
             subquery="WHERE expiration_date=(SELECT MAX(expiration_date) FROM budget WHERE duration='Месяц')")
         return day_budgets + week_budgets + month_budgets
 
+    def get_expenses_from_data_range(self, end_date: datetime, start_date: datetime = datetime.now()) -> list[Expense]:
+        start_date_str = start_date.strftime("%Y-%m-%d %H:%M:%S")
+        end_date_str = end_date.strftime("%Y-%m-%d %H:%M:%S")
+        expenses = self.expenses_repo.get_all(
+            subquery=f"WHERE expense_date <= '{end_date_str}' AND expense_date > '{start_date_str}'"
+        )
+        return expenses
+
     def set_budget(self, amount: float, duration: str) -> None:
         if duration == "День":
             expiration_date = datetime.now() + timedelta(days=1)
@@ -144,7 +152,11 @@ class Bookkeeper:
             expiration_date = datetime.now() + relativedelta.relativedelta(months=1)
         else:
             raise ValueError("Wrong duration, set День/Неделя/Месяц")
-        budget = Budget(amount=0.0, limits=amount, duration=duration, expiration_date=expiration_date)
+        possible_expenses = self.get_expenses_from_data_range(end_date=expiration_date)
+        start_amount = 0.0
+        for expense in possible_expenses:
+            start_amount += expense.amount
+        budget = Budget(amount=start_amount, limits=amount, duration=duration, expiration_date=expiration_date)
         self.budget_repo.add(budget)
         self.view.window.budget_page.budget_window.set_budgets(budgets_getter=self.get_budget)
 

@@ -112,7 +112,7 @@ class expensesList(QtWidgets.QWidget):
         comment = self.expenses_table.item(row, 3).text()
         if column == 1:
             old_value = self.db_expense_getter(pk)
-            self.budgets_editor(value=old_value.amount + amount, date=expense_date)
+            self.budgets_editor(value=-old_value.amount + amount, date=expense_date)
         print("table item changed: ",
               pk, " with amount ", amount,
               " and category ", category,
