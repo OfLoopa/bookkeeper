@@ -22,10 +22,14 @@ class expensesList(QtWidgets.QWidget):
     def __init__(self, *args,
                  expenses_getter: Optional[Callable],
                  expenses_editor: Optional[Callable],
+                 budgets_editor: Optional[Callable],
+                 db_expense_getter: Optional[Callable],
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.editor = expenses_editor
+        self.budgets_editor = budgets_editor
+        self.db_expense_getter = db_expense_getter
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
@@ -106,6 +110,9 @@ class expensesList(QtWidgets.QWidget):
         category = self.expenses_table.item(row, 2).text()
         expense_date = datetime.strptime(self.expenses_table.item(row, 0).text(), "%d-%m-%Y")
         comment = self.expenses_table.item(row, 3).text()
+        if column == 1:
+            old_value = self.db_expense_getter(pk)
+            self.budgets_editor(value=old_value.amount + amount, date=expense_date)
         print("table item changed: ",
               pk, " with amount ", amount,
               " and category ", category,
@@ -174,10 +181,12 @@ class elementAddExpense(QtWidgets.QWidget):
     def __init__(self, *args,
                  get_category_list: Callable,
                  adder: Callable,
+                 budgets_editor: Callable,
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.adder = adder
+        self.budgets_editor = budgets_editor
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
@@ -206,6 +215,7 @@ class elementAddExpense(QtWidgets.QWidget):
               " date ", date, " category ", category,
               " comment ", comment)
         self.adder(amount, date, category, comment)
+        self.budgets_editor(value=amount, date=date)
 
 
 class expensesPage(QtWidgets.QWidget):
@@ -214,15 +224,26 @@ class expensesPage(QtWidgets.QWidget):
                  get_categories_handler: Optional[Callable],
                  add_handler: Optional[Callable],
                  edit_handler: Optional[Callable],
+                 edit_budgets_handler: Optional[Callable],
+                 get_db_expense_handler: Optional[Callable],
                  **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.expenses_list = expensesList(expenses_getter=get_handler, expenses_editor=edit_handler)
+        self.expenses_list = expensesList(
+            expenses_getter=get_handler,
+            expenses_editor=edit_handler,
+            budgets_editor=edit_budgets_handler,
+            db_expense_getter=get_db_expense_handler
+        )
         self.layout.addWidget(self.expenses_list)
 
-        self.add_expense = elementAddExpense(get_category_list=get_categories_handler, adder=add_handler)
+        self.add_expense = elementAddExpense(
+            get_category_list=get_categories_handler,
+            adder=add_handler,
+            budgets_editor=edit_budgets_handler
+        )
         self.layout.addWidget(self.add_expense)
 

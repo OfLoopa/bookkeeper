@@ -70,7 +70,9 @@ class Bookkeeper:
                 self.get_expenses,
                 self.get_categories_list,
                 self.add_expense,
-                self.edit_expenses
+                self.edit_expenses,
+                self.update_budgets,
+                self.get_expense_from_repo
             ],
             "budget": [
                 self.get_budget,
@@ -160,6 +162,9 @@ class Bookkeeper:
             self.budget_repo.update(budget)
 
         self.view.window.budget_page.budget_window.set_budgets(budgets_getter=self.get_budget)
+
+    def get_expense_from_repo(self, pk: int) -> Expense:
+        return self.expenses_repo.get(pk)
 
 
 if __name__ == "__main__":

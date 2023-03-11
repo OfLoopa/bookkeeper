@@ -89,6 +89,8 @@ class MainWindow(QtWidgets.QWidget):
     get_categories_handler: Optional[Callable]
     add_expense_handler: Optional[Callable]
     edit_expense_handler: Optional[Callable]
+    edit_budgets_handler: Optional[Callable]
+    get_db_expense_handler: Optional[Callable]
 
     get_budgets_handler: Optional[Callable]
     set_budgets_handler: Optional[Callable]
@@ -115,7 +117,9 @@ class MainWindow(QtWidgets.QWidget):
             get_handler=self.get_expenses_handler,
             get_categories_handler=self.get_categories_handler,
             add_handler=self.add_expense_handler,
-            edit_handler=self.edit_expense_handler
+            edit_handler=self.edit_expense_handler,
+            edit_budgets_handler=self.edit_budgets_handler,
+            get_db_expense_handler=self.get_db_expense_handler
         )
         self.categories_page = categoriesPage(
             get_handler=self.get_category_handler,
@@ -147,6 +151,8 @@ class MainWindow(QtWidgets.QWidget):
         self.get_categories_handler = handlers[1]
         self.add_expense_handler = handlers[2]
         self.edit_expense_handler = handlers[3]
+        self.edit_budgets_handler = handlers[4]
+        self.get_db_expense_handler = handlers[5]
 
     def register_budgets_handlers(self, handlers: list[Optional[Callable]]) -> None:
         self.get_budgets_handler = handlers[0]
@@ -172,42 +178,7 @@ class View:
         self.window.show()
         sys.exit(self.app.exec())
 
-    def register_handlers(self, handlers_obj: dict[str, list[Optional[Callable]]] | None = None):
-        if handlers_obj is None:
-            handlers_obj = self.register_example_handlers()
+    def register_handlers(self, handlers_obj: dict[str, list[Optional[Callable]]]):
         self.category_handlers = handlers_obj["category"]
         self.expenses_handlers = handlers_obj["expenses"]
         self.budgets_handlers = handlers_obj["budget"]
-
-    # Test View handlers
-    def setter_example(self, category_name, parent_id):
-        if parent_id == "":
-            categories_example[8] = {"name": category_name}
-        else:
-            set_elem_in_tree(categories_example, [category_name, int(parent_id), 8])
-        self.window.categories_page.categories_list.set_tree(category_tree_getter=get_example)
-
-    def editor_example(self, category_id, new_name, new_parent_id):
-        parent_id = get_elem_parent(categories_example, category_id)
-        if new_parent_id == "":
-            set_elem_in_tree(categories_example, [new_name, parent_id, int(category_id)])
-        else:
-            delete_elem_from_tree(categories_example, int(category_id))
-            set_elem_in_tree(categories_example, [new_name, int(new_parent_id), int(category_id)])
-        self.window.categories_page.categories_list.set_tree(category_tree_getter=get_example)
-
-    def deleter_example(self, category_id):
-        if category_id != "":
-            delete_elem_from_tree(categories_example, int(category_id))
-        self.window.categories_page.categories_list.set_tree(category_tree_getter=get_example)
-
-    def register_example_handlers(self):
-        return {
-            "category": [get_example, self.setter_example, self.editor_example, self.deleter_example]
-        }
-
-
-if __name__ == "__main__":
-    view = View()
-    view.register_handlers()
-    view.start_app()
