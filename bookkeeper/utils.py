@@ -65,7 +65,8 @@ def read_tree(lines: Iterable[str]) -> list[tuple[str, str | None]]:
 
 def build_dict_tree_from_list(sorted_list: list) -> dict:
     """
-    Функция строит из массива записей вида (имя, родительский id, id) дерево с json-подобной структурой (ключи - id)
+    Функция строит из массива записей вида (имя, родительский id, id)
+    дерево с json-подобной структурой (ключи - id)
     """
     tree = {}
     for element in sorted_list:
@@ -73,7 +74,7 @@ def build_dict_tree_from_list(sorted_list: list) -> dict:
     return tree
 
 
-def get_elem_in_tree(tree: dict, pk: int) -> list:
+def get_elem_in_tree(tree: dict, pk: int) -> list | None:
     """
     Функция по id элемента ищет его в json-like дереве
     """
@@ -86,7 +87,7 @@ def get_elem_in_tree(tree: dict, pk: int) -> list:
             return value
 
 
-def get_elem_parent(tree: dict, pk: int, prev_parent: int = None) -> int:
+def get_elem_parent(tree: dict, pk: int, prev_parent: int = None) -> int | None:
     """
     Функция по id элемента ищет id его родителя в json-like дереве
     """

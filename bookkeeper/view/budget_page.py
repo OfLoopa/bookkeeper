@@ -2,16 +2,21 @@
 Виджет для отображения страницы просмотра и задания бюджета в окне приложения
 """
 from typing import Optional, Callable
-
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.models.budget import Budget
 
 
 class setBudgetInput(QtWidgets.QWidget):
+    """
+    Класс виджета ввода бюджета на опреленный срок
+    """
     def __init__(self, name, *args,
                  budget_setter: Optional[Callable],
                  **kwargs) -> None:
+        """name - название периода,
+        на который задается бюджет
+        (например "День")"""
         super().__init__(*args, **kwargs)
         self.duration = name
         self.setter = budget_setter
@@ -30,14 +35,21 @@ class setBudgetInput(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def save_btn_clicked(self) -> None:
-        limit = float(self.input.text())
-        self.setter(limit, self.duration)
+        """Функия-слот,
+        обрабатывающая нажатие на кнопку сохранения"""
+        try:
+            limit = float(self.input.text())
+            self.setter(limit, self.duration)
+        except ValueError as e:
+            QtWidgets.QMessageBox.critical(self, 'Ошибка', str(e))
 
 
 class BudgetWindow(QtWidgets.QWidget):
+    """Класс виджета с окном, отображающим бюджеты"""
     def __init__(self, *args,
                  budgets_getter: Optional[Callable],
                  **kwargs) -> None:
+        """budgets_getter: обработчик, возвращающий список бюджетов"""
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -63,6 +75,8 @@ class BudgetWindow(QtWidgets.QWidget):
         self.set_budgets(budgets_getter)
 
     def build_budgets(self, data: list[Budget]) -> None:
+        """Функция создает ячейки таблицы
+        по входящему списку бюджетов"""
         for i, row in enumerate(data):
             self.budgets_table.setItem(
                 i, 0,
@@ -78,8 +92,9 @@ class BudgetWindow(QtWidgets.QWidget):
             )
 
     def set_budgets(self, budgets_getter: Callable) -> None:
+        """Функция перестраивает таблицу с бюджетами"""
         if self.budgets_table.itemAt(0, 0) is not None:
-            self.budgets_table.setParent(None)
+            self.layout.removeWidget(self.budgets_table)
 
         budgets_data = budgets_getter()
 
@@ -102,9 +117,13 @@ class BudgetWindow(QtWidgets.QWidget):
 
 
 class ChangeBudgetWindow(QtWidgets.QWidget):
+    """
+    Класс виджета изменения бюджетов
+    """
     def __init__(self, *args,
                  budgets_setter: Optional[Callable],
                  **kwargs) -> None:
+        """budgets_setter: обработчик, изменяющий бюджет"""
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()
@@ -119,6 +138,9 @@ class ChangeBudgetWindow(QtWidgets.QWidget):
 
 
 class BudgetInfoWindow(QtWidgets.QWidget):
+    """
+    Класс виджета информационного окна
+    """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -128,12 +150,9 @@ class BudgetInfoWindow(QtWidgets.QWidget):
         self.budget_info_window_title = QtWidgets.QLabel("Подсказка")
         self.budget_info = QtWidgets.QLabel(
             """
-            Бюджет задается на следующие сроки:
-            
+            Бюджет задается на следующие сроки:            
                 День - на следующий календарный день с 0:00 до 23:59
-                
                 Неделя - на календарную неделю, начиная с следующего дня с 0:00
-                
                 Месяц - на календарный месяц, начиная с следующего дня 0:00
             """
         )
@@ -143,10 +162,15 @@ class BudgetInfoWindow(QtWidgets.QWidget):
 
 
 class BudgetPage(QtWidgets.QWidget):
+    """Класс виджета страницы бюджетов"""
     def __init__(self, *args,
                  get_handler: Optional[Callable],
                  set_handler: Optional[Callable],
                  **kwargs) -> None:
+        """
+        :param get_handler: обработчик для получения списка бюджетов
+        :param set_handler: обработчик для задания бюджета
+        """
         super().__init__(*args, **kwargs)
 
         self.layout = QtWidgets.QVBoxLayout()

@@ -60,5 +60,7 @@ class AbstractRepository(ABC, Generic[T]):
         """ Удалить запись """
 
     @classmethod
-    def repository_factory(cls, models: list[type], db_file: str | None = None) -> dict[type, type]:
+    def repository_factory(
+            cls, models: list[type], db_file: str | None = None
+    ) -> dict[type, type]:
         """ создает словарь репозиториев для каждой из моделей"""
