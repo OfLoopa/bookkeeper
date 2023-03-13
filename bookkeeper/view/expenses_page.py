@@ -177,10 +177,15 @@ class chooseCategoryElement(QtWidgets.QWidget):
         self.layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.layout)
 
-        self.choose_category_label = QtWidgets.QLabel("Категория")
+        self.choose_category_label = QtWidgets.QLabel(
+            "Категория\n (НЕ нажимать на область вне раскрытого списка)"
+        )
         self.layout.addWidget(self.choose_category_label)
 
         self.category_box = CategoryComboBox(category_list_getter=category_list_getter)
+        self.category_box.setToolTip(
+            'когда список раскрыт - НЕ нажимать область вне списка!'
+            '(Вызовет перезагрузку компьютера)')
         self.layout.addWidget(self.category_box)
 
 
