@@ -245,7 +245,7 @@ class elementAddExpense(QtWidgets.QWidget):
                 )
             except ValueError:
                 raise ValueError("Введите дату числами в формате день-месяц-год")
-            category = self.choose_category.category_box.currentText()
+            category = self.choose_category.category_box.category_box.currentText()
             comment = self.add_comment.add_comment_input.toPlainText()
             print("add expense:\namount ", amount,
                   " date ", date, " category ", category,
